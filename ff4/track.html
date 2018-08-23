@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>FFIV Tracker</title>
+<style type="text/css">
+@font-face {
+	font-family:"ffivds";
+	src:url("./fonts/FFIVNDS.woff") format("woff"),url("./fonts/FFIVNDS.ttf") format("truetype");
+	font-weight:normal;font-style:normal;
+}			
+body, table, input, select	{font-family:inherit; font-size:inherit;}
+body	{margin:0; padding:0; border:0; font-size:12pt; font-family:ffivds, sans-serif;}
+
+.cf:before, .cf:after	{content:' '; display:table;}
+.cf:after	{clear:both;}
+
+.cf>.fl	{float:left;}
+.cf>.fr	{float:right;}
+
+.l	{text-align:left;}
+.c	{text-align:center;}
+.r	{text-align:right;}
+.j	{text-align:justify;}
+
+#hdr	{background:#eef;}
+	#hdr h1	{background:#ddf; margin:0 auto; padding:1em 0;}
+
+#track	{margin:1em auto;}
+
+tr[data-enabled="false"]	{opacity:0.25;}
+
+select[data-type="char"]	{text-transform:capitalize;}
+#chars	{margin:1em auto;}
+.chara	{display:inline-block; width:32px; height:32px; background:url('./img/chara/heads.png') left top no-repeat; position:relative; text-transform:capitalize;}
+.chara i	{position:absolute; top:32px; left:0; display:none;}
+.chara:hover i	{display:inline-block;}
+.chara.disabled	{opacity:0.5; filter:grayscale();}
+#char-cecil, #char-kain, #char-rydia, #char-edward, #char-palom, #char-edge	{background-position-y:0px;}
+#char-cecil.paladin, #char-tellah, #char-rydia.adult, #char-rosa, #char-cid, #char-porom, #char-fusoya	{background-position-y:-32px;}
+#char-kain, #char-tellah	{background-position-x:-32px;}
+#char-rydia	{background-position-x:-64px;}
+#char-edward, #char-rosa	{background-position-x:-96px;}
+#char-yang, #char-cid	{background-position-x:-128px;}
+#char-palom, #char-porom	{background-position-x:-160px;}
+#char-edge, #char-fusoya	{background-position-x:-192px;}
+</style>
+<script type="text/javascript">/* <![CDATA[ */
+var chars = ["n/a", "cecil", "kain", "rydia", "tellah", "edward", "rosa", "yang", "palom", "porom", "cid", "edge", "fusoya"];
+var keys = [
+	["unknown","unknown"],
+	["enterprise","(Ship) Enterprise"],
+	["crystal","Crystal"],
+	["pass","Pass"],
+	["hook","Hook"],
+	["darkness","Darkness Crystal"],
+	["earth","Earth Crystal"],
+	["twinharp","Twin Harp"],
+	["package","Package"],
+	["sandruby","Sand Ruby"],
+	["baron","Baron Key"],
+	["magma","Magma Key"],
+	["tower","Tower Key"],
+	["luca","Luca Key"],
+	["adamant","Adamant"],
+	["legend","Legend Sword"],
+	["pan","Pan"],
+	["spoon","Spoon"],
+	["rat","Rat Tail"],
+	["pink","Pink Tail"],
+	["non","Non-key item"],
+];
+var locs = [
+	"unknown",
+	"start",
+	"partner",
+	["mist","D. Mist","Mist Dragon",[]],
+	["guards","Baron Guards","Guards at Kaipo",["package"]],
+	["octomamm","Octomamm","Octomammoth",[]],
+	["damcyan","Damcyan","Castle Damcyan",[]],
+	["antlion","Antlion","Antlion",["enterprise"]],
+	["waterhag","WaterHag","Sahagin",["enterprise","sandruby"]],
+	["mombomb","MomBomb","Mom Bomb",["enterprise"]],
+	["gauntlet","Gauntlet","Gauntlet at Fabul",["enterprise"]],
+	["mysidia1","Palom","Palom at Mysidia",["enterprise"]],
+	["mysidia2","Porom","Porom at Mysidia",["enterprise"]],
+	["milon","Milon","Scarmiglione + Ghast*4",["enterprise"]],
+	["milonz","Milon Z.","Scarmiglione, Fiend of Earth",["enterprise"]],
+	["dknight","D. Knight","Reflection at Mt. Ordeals",["enterprise"]],
+	["soldiers","Baron Soldiers","Officer + Soldier*4 at Baron Inn",[]],
+	["karate","Karate","Amnesiac Yang",[]],
+	["baigan","Baigan","Baigan",["baron"]],
+	["kainazzo","Kainazzo","Cagnazzo, Fiend of Water",["baron"]],
+	["odin","Odin","Odin, King of Baron",["baron"]],
+	["astos","Dark Elf","Dark Elf Astos",["twinharp"]],
+	["magus","Magus Sisters","Magus Sisters",["earth"]],
+	["valvalis","Valvalis","Barbariccia, Fiend of Wind",["earth"]],
+	["calbrena","Calbrena","Calcabrina",["underground"]],
+	["golbez","Golbez","Golbez",["underground"]],
+	["lugae","Dr. Lugae","Dr. Lugae",["underground"]],
+	["imps","Dark Imps","Dark Imps",["underground","tower"]],
+	["feymarch","Feymarch","Feymarch, Land of Summons",["underground"]],
+	["asura","Asura","Asura, Queen of Summons",["underground"]],
+	["leviathan","Leviatan","Leviathan, King of Summons",["underground"]],
+	["sheila","Sheila 1","Sheila, wife of Yang",["underground"]],
+	["sylphs","Sylphs","Sylphs caring for Yang",["underground","pan"]],
+	["pan","Sheila 2","Sheila, returning the Pan",["pan"]],
+	["kokkol","Kokkol","Smithy at Kokkol",["underground","adamant","legend"]],
+	["adamant","Grotto 1","Adamant Grotto near Silvera, Rat Tail",["hook","rat"]],
+	["pink","Grotto 2","Adamant Grotto near Silvera, Pink Tail",["hook","pink"]],
+	["eblan","K+Q Eblan","King + Queen Eblan",["hook"]],
+	["rubicant","Rubicant","Rubicante, Fiend of Fire",["hook"]],
+	["wall","Evil Wall","Evil Wall",["underground","luca"]],
+	["moon","Moon","Lunar Palace",["darkness"]],
+	["elements","Elements","Four Elemental Fiends",["darkness"]],
+	["cpu","CPU","CPU",["darkness"]],
+	["bahamut","Bahamut","Bahamut, Lord of Dragons",["darkness"]],
+	["paledim","Pale Dim","White Dragon",["darkness"]],
+	["lunar","D. Lunar","Lunar Dragon*2",["darkness"]],
+	["plague","Plague","Plague Horror",["darkness"]],
+	["ogopogo","Ogopogo","Ogopogo",["darkness"]],
+	["wyvern","Wyvern","Dark Bahamut",["darkness"]],
+	["zeromus","Zeromus","Zeromus, Wrath of Zemus",["crystal"]]
+];
+/* ]]> */</script>
+</head>
+<body>
+<header class="cf" id="hdr"><h1 class="c">FFIV Tracker</h1></header>
+<section class="cf c" id="chars"></section>
+<table id="track">
+	<thead><tr><th>Vanilla Location</th><th>Loc Pre-req</th><th>Boss</th><th>Char</th><th>Item</th></tr></thead>
+	<tbody id="track-body"></tbody>
+</table>
+<footer class="cf" id="ftr">
+	<p class="c">Heads ripped by Tonberry2k @ Spriters Resource</p>
+	<p class="c">&copy; Alex Rosario</p>
+</footer>
+<script type="text/javascript">/* <![CDATA[ */
+function pop(el) {
+	if ("string"===typeof el) el = document.getElementById(el);
+	if (el) {
+		var opt_b = "", tb = [];
+		var opt_k = "", opt_c = "";
+		var opt_n = "<option value='none'>none</option>";
+		var opt_x = "<option value='excalibur'>Excalibur</option>";
+		var opt_a = "<option value='non'>Adamant Armor</option>";
+		var opt_z = "<option value='zeromus'>Zeromus</option>";
+		var ch = "";
+		chars.forEach(function(e,i,a){
+			opt_c += '<option value="'+e+'">'+e+'</option>';
+			if ("n/a"!==e) {ch+="<span class='chara disabled' id='char-"+e+"'><i>"+e+"</i></span>";}
+		});
+		keys.forEach(function(e,i,a){
+			opt_k += '<option value="'+e[0]+'">'+e[1]+'</option>';
+		});
+		var not_boss = [
+			"start","partner",
+			"damcyan","palom","porom",
+			"feymarch","sheila","sylphs","pan",
+			"adamant","pink","kokkol","moon"
+		];
+		//var not_char = ["mist","octomamm"];
+		var not_item = [
+			"guards","mombomb",
+			"mysidia1","mysidia2","milon","milonz",
+			"soldiers","baigan","magus","calbrena",
+			"eblan","moon","elements","zeromus"
+		];
+		locs.forEach(function(e,i,a){
+			var is_u = "unknown"===e;
+			var is_1 = "start"===e||"partner"===e;
+			var is_z = "zeromus"===e[0];
+			var is_d = "damcyan"===e[0];
+			var is_f = "feymarch"===e[0];
+			var is_l = "moon"===e[0];
+			var is_k = "kokkol"===e[0];
+			var not_b = is_1||not_boss.indexOf(e[0])>-1;
+			var not_i = is_z||not_item.indexOf(e[0])>-1;
+			var not_c = is_z||is_f;
+			if (!not_b&&!is_z) opt_b += '<option value="'+(is_u?e:e[0])+'">'+(is_u?e:e[1])+'</option>';
+			tb.push([
+				is_u||is_1?e:e[0],	// id
+				is_u||is_1?e:((e[1]!==e[2]?e[1]+' / ':'')+e[2]),	// name
+				not_c?opt_n:opt_c,	// chars
+				is_k?opt_x:(not_i?opt_n:opt_k),	// items
+				(is_1?"":e[3])	// pre-req
+			]);
+		});
+		var txt = "";
+		tb.forEach(function(e,i,a){
+			var is_z = "zeromus"===e[0]; 
+			var is_f = "feymarch"===e[0];
+			var is_l = "moon"===e[0];
+			var is_d = "damcyan"===e[0];
+			var is_1 = "start"===e[0]||"partner"===e[0];
+			var not_b = is_1||not_boss.indexOf(e[0])>-1;
+			if ("unknown"!==e[0])
+				txt += '<tr id="row-'+e[0]+'" data-loc="'+e[0]+'" data-pre="'+e[4]+'">'+
+					'<td>'+e[1]+'</td>'+
+					'<td>'+e[4]+'</td>'+
+					'<td><select data-type="boss" id="boss-'+e[0]+'">'+(not_b?opt_n:(is_z?opt_z:opt_b))+'</select></td>'+
+					'<td><select data-type="char" id="char-'+e[0]+'">'+(e[2])+'</select></td>'+
+					'<td><select data-type="item" id="item-'+e[0]+'">'+e[3]+'</select></td>'+
+					'</tr>';
+		});
+		el.innerHTML = txt;
+		var _ch = document.getElementById("chars");
+		if (_ch) _ch.innerHTML = ch;
+	}
+}
+function attach_check(els) {
+	if ("string"===typeof els) els = document.querySelectorAll(els);
+	if (els) {
+		var rows = document.querySelectorAll("tr[data-pre]:not([data-pre=''])");
+		function _reset() {
+			if (rows) Array.prototype.forEach.call(rows, function(e){
+				e.dataset["enabled"] = false;
+				e.dataset["needs"] = e.dataset["pre"];
+				var sels = e.querySelectorAll("select");
+				if (sels) Array.prototype.forEach.call(sels, function(el){
+					el.disabled = true;
+					//console.log("reset",el.id,el.disabled);
+				});
+			});
+		}
+		function _chk(e) {
+			_reset();
+			for (var i=0, l=els.length; i<l; ++i) {
+				var v = els[i].value;
+				var is_under = "magma"===v||"hook"===v;
+				var can;
+				if (is_under) {
+					can = document.querySelectorAll("tr[data-pre*='underground']");
+					if (can) {
+						Array.prototype.forEach.call(can, function(z){
+							if (!("needs" in z.dataset)) z.dataset["needs"] = z.dataset["pre"];
+							var needs = z.dataset["needs"].split(","), n = needs.indexOf(v), u = needs.indexOf("underground");
+							if (u>-1) {
+								needs.splice(u, 1);
+								z.dataset["needs"] = needs.toString(",");
+							}
+							var sels;
+							if (0===needs.length) {
+								z.dataset["enabled"] = true;
+								if ((sels=z.querySelectorAll("select"))) Array.prototype.forEach.call(sels, function(el){
+									el.disabled = false;
+									//console.log("needs",el.id,el.disabled);
+								});
+							}
+						});
+					}
+				}
+				can = document.querySelectorAll("tr[data-pre*='"+v+"']");
+				if (can) {
+					Array.prototype.forEach.call(can, function(z){
+						if (!("needs" in z.dataset)) z.dataset["needs"] = z.dataset["pre"];
+						var sels;
+						var needs = z.dataset["needs"].split(","), n = needs.indexOf(v), u = needs.indexOf("underground");
+						//console.log("chk",needs,v);
+						if (n>-1) {
+							needs.splice(n, 1);
+							z.dataset["needs"] = needs.toString(",");
+						}
+						if (0===needs.length) {
+							z.dataset["enabled"] = true;
+							if ((sels=z.querySelectorAll("select"))) Array.prototype.forEach.call(sels, function(el){
+								el.disabled = false;
+								//console.log("needs",el.id,el.disabled);
+							});
+						}
+					});
+				}
+			}
+		}
+		Array.prototype.forEach.call(els, function(e){
+			e.addEventListener("change", _chk);
+		});
+		_reset();
+	}
+}
+function attach_char(els) {
+	if ("string"===typeof els) els = document.querySelectorAll(els);
+	if (els) {
+		var imgs = document.querySelectorAll("#chars .chara");
+		function _reset() {
+			if (imgs) Array.prototype.forEach.call(imgs, function(e){
+				e.classList.add("disabled");
+			});
+		}
+		function _chk(e) {
+			_reset();
+			for (var i=0, l=els.length; i<l; ++i) {
+				var v = els[i].value;
+				var img = document.getElementById("char-"+v);
+				if (img) {
+					img.classList.remove("disabled");
+					if ("cecil"===v) {
+						var is_pal = "unknown"!==document.getElementById("boss-cecil").value;
+						if (is_pal) img.classList.add("paladin");
+						else img.classList.remove("paladin");
+					}
+				}
+			}
+		}
+		Array.prototype.forEach.call(els, function(e){
+			e.addEventListener("change", _chk);
+		});
+		_reset();
+	}
+}
+function attach_boss(els) {
+	if ("string"===typeof els) els = document.querySelectorAll(els);
+	if (els) {
+		function _reset() {}
+		function _chk(e) {
+			_reset();
+			var el = e.srcElement, id = el.id;
+			if ("boss-cecil"===id) {
+				var is_ready = "unknown"!==el.value;
+				var img;
+				if (is_ready) {
+					img = document.getElementById("char-cecil");
+					if (img) img.classList.add("paladin");
+				}
+				else {
+					img = document.getElementById("char-cecil");
+					if (img) img.classList.remove("paladin");
+				}
+			}
+			else if ("boss-golbez"===id) {
+				var is_ready = "unknown"!==el.value;
+				var img;
+				if (is_ready) {
+					img = document.getElementById("char-rydia");
+					if (img) img.classList.add("adult");
+				}
+				else {
+					img = document.getElementById("char-rydia");
+					if (img) img.classList.remove("adult");
+				}
+				console.log("check",is_ready);
+			}
+		}
+		Array.prototype.forEach.call(els, function(e){
+			e.addEventListener("change", _chk);
+			//console.log("attach",e.id);
+		});
+		_reset();
+	}
+}
+window.onload = function(){
+	pop("track-body");
+	attach_check("select[data-type='item']");
+	attach_char("select[data-type='char']");
+	attach_boss("select[data-type='boss']");
+};
+/* ]]> */</script>
+</body></html>
